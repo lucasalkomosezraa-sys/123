@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كود نيمز - النسخة القبطية والمتنوعة</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #1e293b;
+    --panel-light: #334155;
+    --gold: #f59e0b;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --t0: #ef4444; /* أحمر */
+    --t1: #3b82f6; /* أزرق */
+    --t2: #10b981; /* أخضر */
+    --t3: #a855f7; /* بنفسجي */
+    --neutral: #64748b;
+    --assassin: #09090b;
+  }
+  * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  button {
+    cursor: pointer; border: none; border-radius: 10px; padding: 10px 18px;
+    font-weight: 700; font-size: 0.95rem; transition: 0.2s; color: #fff;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; }
+  .btn-primary { background: #3b82f6; }
+  .btn-success { background: #10b981; color: #000; }
+  .btn-danger { background: #ef4444; }
+  .btn-dark { background: #334155; }
+
+  input, select {
+    background: #0f172a; border: 2px solid #334155; color: #fff;
+    padding: 10px 14px; border-radius: 10px; font-size: 1rem; width: 100%; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--gold); }
+
+  .screen { display: none; padding: 18px; max-width: 1400px; margin: 0 auto; width: 100%; }
+  .screen.active { display: block; }
+
+  /* Landing */
+  .hero {
+    text-align: center; max-width: 540px; margin: 30px auto; background: var(--panel);
+    padding: 28px; border-radius: 22px; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .hero h1 { font-size: 2.2rem; color: var(--gold); margin-bottom: 6px; }
+  .hero p { color: var(--muted); margin-bottom: 22px; font-size: 0.95rem; }
+  .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .role-tabs button { flex: 1; background: #334155; }
+  .role-tabs button.active { background: var(--gold); color: #000; }
+  .form-group { text-align: right; margin-bottom: 14px; }
+  .form-group label { display: block; margin-bottom: 6px; font-weight: 700; color: #cbd5e1; font-size: 0.9rem; }
+
+  /* Lobby Screen */
+  .lobby-header {
+    background: var(--panel); border-radius: 20px; padding: 20px; border: 1px solid #334155;
+    display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; margin-bottom: 20px;
+  }
+  .code-display {
+    background: #0f172a; border: 2px dashed var(--gold); padding: 12px 24px; border-radius: 16px;
+    text-align: center;
+  }
+  .code-display .big-code { font-size: 2.6rem; font-weight: 900; color: var(--gold); letter-spacing: 6px; line-height: 1.1; }
+  .qr-box { background: #fff; padding: 8px; border-radius: 12px; display: inline-flex; }
+  .qr-box img { width: 110px; height: 110px; display: block; }
+
+  .lobby-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .lobby-team-card {
+    background: var(--panel); border-radius: 16px; padding: 16px; border-top: 6px solid var(--neutral);
+    border-left: 1px solid #334155; border-right: 1px solid #334155; border-bottom: 1px solid #334155;
+  }
+  .slot-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #0f172a; padding: 10px 12px; border-radius: 10px; margin-top: 10px; font-size: 0.9rem;
+  }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+  .badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+  .badge-wait { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+
+  /* Game Topbar */
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+    background: var(--panel); padding: 10px 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #334155;
+  }
+  .room-badge { background: #0f172a; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--gold); font-weight: 900; color: var(--gold); letter-spacing: 2px; }
+  .timer-box { font-size: 1.7rem; font-weight: 900; background: #0f172a; padding: 2px 16px; border-radius: 10px; min-width: 90px; text-align: center; }
+  .timer-box.danger { color: #ef4444; animation: pulse 0.8s infinite; }
+
+  .scoreboard { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .team-card {
+    flex: 1; min-width: 140px; background: var(--panel); padding: 8px 14px; border-radius: 14px;
+    border-right: 6px solid var(--neutral); display: flex; justify-content: space-between; align-items: center;
+    opacity: 0.65; transition: 0.3s;
+  }
+  .team-card.active-turn { opacity: 1; transform: scale(1.02); box-shadow: 0 0 18px rgba(245, 158, 11, 0.35); border-top: 2px solid var(--gold); }
+  .team-card.eliminated { opacity: 0.3; text-decoration: line-through; }
+  .team-score { font-size: 1.8rem; font-weight: 900; }
+
+  .clue-banner {
+    background: linear-gradient(90deg, #1e293b, #0f172a, #1e293b);
+    border: 2px solid var(--gold); border-radius: 14px; padding: 10px 16px;
+    text-align: center; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .clue-word { font-size: 1.6rem; font-weight: 900; color: var(--gold); }
+  .clue-num { background: var(--gold); color: #000; font-weight: 900; font-size: 1.3rem; padding: 1px 12px; border-radius: 8px; }
+
+  .log-bar {
+    background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 6px 14px;
+    font-size: 0.88rem; color: #cbd5e1; margin-bottom: 12px; text-align: center;
+  }
+
+  /* Board Grid */
+  .board { display: grid; gap: 9px; margin-bottom: 14px; }
+  .card {
+    background: #f1f5f9; color: #0f172a; border-radius: 12px; padding: 12px 6px;
+    text-align: center; font-weight: 900; font-size: 1.1rem; min-height: 70px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 #94a3b8; transition: 0.2s; user-select: none; word-break: break-word;
+  }
+  .card.clickable { cursor: pointer; }
+  .card.clickable:hover { transform: translateY(-3px); box-shadow: 0 7px 0 #94a3b8; }
+
+  .card.revealed.c-t0 { background: var(--t0); color: #fff; box-shadow: 0 4px 0 #991b1b; }
+  .card.revealed.c-t1 { background: var(--t1); color: #fff; box-shadow: 0 4px 0 #1e40af; }
+  .card.revealed.c-t2 { background: var(--t2); color: #fff; box-shadow: 0 4px 0 #065f46; }
+  .card.revealed.c-t3 { background: var(--t3); color: #fff; box-shadow: 0 4px 0 #6b21a8; }
+  .card.revealed.c-neutral { background: #475569; color: #cbd5e1; box-shadow: 0 4px 0 #1e293b; }
+  .card.revealed.c-assassin { background: #000; color: #ef4444; border: 2px solid #ef4444; box-shadow: 0 4px 0 #7f1d1d; }
+
+  .spymaster-view .card:not(.revealed).c-t0 { border: 4px solid var(--t0); background: #fee2e2; }
+  .spymaster-view .card:not(.revealed).c-t1 { border: 4px solid var(--t1); background: #dbeafe; }
+  .spymaster-view .card:not(.revealed).c-t2 { border: 4px solid var(--t2); background: #d1fae5; }
+  .spymaster-view .card:not(.revealed).c-t3 { border: 4px solid var(--t3); background: #f3e8ff; }
+  .spymaster-view .card:not(.revealed).c-neutral { border: 4px solid #94a3b8; background: #e2e8f0; }
+  .spymaster-view .card:not(.revealed).c-assassin { border: 4px solid #000; background: #27272a; color: #f87171; }
+  .spymaster-view .card.revealed { opacity: 0.32; }
+
+  .controls-bar {
+    background: var(--panel); padding: 14px; border-radius: 16px; display: flex; flex-wrap: wrap; gap: 10px;
+    align-items: center; justify-content: center; border: 1px solid #334155;
+  }
+  .spy-inputs { display: flex; gap: 8px; width: 100%; max-width: 600px; }
+
+  /* Modal & Toast */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
+    align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--panel); border: 2px solid var(--gold); border-radius: 18px;
+    padding: 24px; max-width: 400px; width: 100%; text-align: center;
+  }
+  .modal-box h3 { color: var(--gold); margin-bottom: 10px; font-size: 1.3rem; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #000; padding: 10px 22px; border-radius: 30px;
+    font-weight: 900; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; z-index: 2000;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @media (max-width: 700px) {
+    .card { font-size: 0.85rem; min-height: 54px; padding: 6px 3px; }
+    .clue-word { font-size: 1.2rem; }
+    .code-display .big-code { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. شاشة البداية -->
+<div id="screen-home" class="screen active">
+  <div class="hero">
+    <h1>☦️ كود نيمز</h1>
+    <p>لعبة التحدي للفرق — كنيسة، أكلات، بلاد، حيوانات، ومنوعات</p>
+
+    <div class="role-tabs">
+      <button id="tab-host" class="active" onclick="switchTab('host')">👑 أنا الليدر</button>
+      <button id="tab-join" onclick="switchTab('join')">📱 دخول كـ فريق / قائد</button>
+    </div>
+
+    <!-- إعدادات الليدر -->
+    <div id="panel-host">
+      <div class="form-group">
+        <label>عدد الفرق:</label>
+        <select id="host-teams-count">
+          <option value="2">فريقين (25 كارت - 5×5)</option>
+          <option value="3">3 فرق (36 كارت - 6×6)</option>
+          <option value="4">4 فرق (42 كارت - 7×6)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>نوع الكلمات:</label>
+        <select id="host-theme">
+          <option value="all">ميكس شامل (كنيسة + أكلات + بلاد + حيوانات + منوعات)</option>
+          <option value="coptic">الكنيسة القبطية الأرثوذكسية فقط</option>
+          <option value="food">أكلات ومشروبات مصرية فقط</option>
+          <option value="countries">بلاد ومدن فقط</option>
+          <option value="animals">حيوانات وطيور فقط</option>
+          <option value="general">منوعات عامة فقط</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>وقت الدور (بالثواني):</label>
+        <input type="number" id="host-timer" value="90" min="30" max="300">
+      </div>
+      <button class="btn-gold" style="width:100%; font-size:1.15rem;" onclick="createLobby()">إنشاء غرفة الانتظار 🚀</button>
+    </div>
+
+    <!-- إعدادات اللاعبين -->
+    <div id="panel-join" style="display:none;">
+      <div class="form-group">
+        <label>كود الغرفة (من شاشة الليدر):</label>
+        <input type="text" id="join-code" placeholder="مثال: 4829" style="text-align:center; font-size:1.3rem; letter-spacing:4px;">
+      </div>
+      <div class="form-group">
+        <label>اختر فريقك:</label>
+        <select id="join-team">
+          <option value="0">الفريق الأول (الأحمر)</option>
+          <option value="1">الفريق الثاني (الأزرق)</option>
+          <option value="2">الفريق الثالث (الأخضر)</option>
+          <option value="3">الفريق الرابع (البنفسجي)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>دورك في الفريق:</label>
+        <select id="join-role">
+          <option value="spymaster">🕵️‍♂️ القائد (بيشوف الألوان ويكتب التخمين)</option>
+          <option value="operative">🎯 الفريق (بيخمن ويختار الكروت)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>اسم فريقك (اختياري):</label>
+        <input type="text" id="join-custom-name" placeholder="اكتب اسم فريقك هنا">
+      </div>
+      <button class="btn-primary" style="width:100%; font-size:1.15rem;" onclick="joinGame()">دخول الغرفة 🎮</button>
+      <p id="join-status" style="margin-top:10px; color:#f59e0b; font-weight:700;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- 2. غرفة الانتظار (Lobby) -->
+<div id="screen-lobby" class="screen">
+  <div class="lobby-header">
+    <div>
+      <h2 style="color:var(--gold); margin-bottom:4px;">⏳ غرفة الانتظار</h2>
+      <p id="lobby-subtitle" style="color:var(--muted);">راقب دخول الفرق، ولما كله يبقى تمام اضغط "بدء اللعبة"</p>
+    </div>
+    <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+      <div class="code-display">
+        <div style="font-size:0.8rem; color:var(--muted);">كود الغرفة</div>
+        <div id="lobby-room-code" class="big-code">----</div>
+      </div>
+      <div id="lobby-qr-wrap" class="qr-box" style="display:none;">
+        <img id="lobby-qr-img" src="" alt="QR Code">
+      </div>
+    </div>
+  </div>
+
+  <div id="lobby-teams-grid" class="lobby-grid"></div>
+
+  <div id="host-lobby-actions" class="controls-bar" style="display:none;">
+    <button class="btn-success" style="font-size:1.25rem; padding:14px 36px;" onclick="startGameFromLobby()">🚀 بدء اللعبة الآن</button>
+  </div>
+
+  <div id="client-lobby-wait" class="controls-bar" style="display:none;">
+    <span style="color:var(--gold); font-weight:700; font-size:1.1rem;">✅ تم اتصالك بنجاح! في انتظار الليدر لبدء الجولة...</span>
+  </div>
+</div>
+
+<!-- 3. شاشة اللعبة -->
+<div id="screen-game" class="screen">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span id="display-room-code" class="room-badge">----</span>
+      <span id="role-badge" style="font-weight:700; color:#cbd5e1;"></span>
+    </div>
+    <div id="display-timer" class="timer-box">01:30</div>
+    <div id="host-quick-controls" style="display:none; gap:6px; flex-wrap:wrap;">
+      <button class="btn-dark" onclick="togglePause()">⏯️ إيقاف</button>
+      <button class="btn-dark" onclick="nextTurn()">⏭️ تخطي</button>
+      <button class="btn-dark" onclick="toggleHostReveal()">👁️ الألوان</button>
+      <button class="btn-gold" onclick="newRound()">🔄 جولة جديدة</button>
+      <button class="btn-danger" onclick="backToLobby()">🏠 الانتظار</button>
+    </div>
+  </div>
+
+  <div id="scoreboard" class="scoreboard"></div>
+
+  <div id="clue-banner" class="clue-banner"></div>
+  <div id="log-bar" class="log-bar">مرحباً بكم في اللعبة!</div>
+
+  <div id="board" class="board"></div>
+
+  <!-- تحكم القائد (Spymaster) -->
+  <div id="spymaster-controls" class="controls-bar" style="display:none;">
+    <div class="spy-inputs">
+      <input type="text" id="clue-word-input" placeholder="اكتب كلمة التخمين (كلمة واحدة)">
+      <input type="number" id="clue-num-input" value="2" min="1" max="9" style="width:85px; text-align:center;">
+      <button id="btn-send-clue" class="btn-gold" onclick="sendClue()">إرسال</button>
+    </div>
+    <button class="btn-dark" onclick="toggleSpyColors()">👁️ إخفاء/إظهار الألوان</button>
+  </div>
+
+  <!-- تحكم الفريق (Operative) -->
+  <div id="operative-controls" class="controls-bar" style="display:none;">
+    <button id="btn-end-turn" class="btn-danger" onclick="confirmEndTurn()">✋ إنهاء الدور</button>
+  </div>
+</div>
+
+<!-- نافذة التأكيد (Modal) -->
+<div id="confirm-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">تأكيد</h3>
+    <p id="modal-msg" style="color:#cbd5e1;"></p>
+    <div class="modal-actions">
+      <button class="btn-success" id="modal-yes">نعم، متأكد</button>
+      <button class="btn-dark" onclick="closeModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ================= بنك الكلمات (240+ كلمة) =================
+const WORDS = {
+  coptic: [
+    "أبونا", "شماس", "قداس", "بخور", "شورية", "منارة", "صليب", "أيقونة", "دير", "راهب",
+    "الأنبا أنطونيوس", "مارجرجس", "مارمينا", "البابا كيرلس", "العذراء", "المذبح", "اللقان",
+    "القربان", "الألحان", "الدف", "التريانتو", "الصوم الكبير", "أحد الشعانين", "القيامة", "الميلاد",
+    "أسبوع الآلام", "البصخة", "المعمودية", "الميرون", "الإنجيل", "المزامير", "الأجبية", "السنكسار",
+    "الخولاجي", "القبطي", "الأسقف", "البطريرك", "الكاتدرائية", "المعلقة", "وادي النطرون", "القديسين",
+    "التسبحة", "كيهك", "النيروز", "الغطاس", "العنصرة", "الرسل", "أبصلمودية", "البركة", "الشهداء",
+    "موسى الأسود", "أبو سيفين", "دميانة", "أبانوب", "بيشوي", "مكاريوس", "شنودة"
+  ],
+  food: [
+    "كشري", "طعمية", "فول", "ملوخية", "محشي", "فتة", "ممبار", "حواوشي", "فطير مشلتت", "كبدة إسكندراني",
+    "سجق", "مسقعة", "بامية", "قلقاس", "مكرونة بشاميل", "شاورما", "بطاطس محمرة", "كفتة", "فراخ مشوية", "سمك مقلي",
+    "رنجة", "فسيخ", "ترمس", "حمص الشام", "بسبوسة", "كنافة", "أم علي", "رز بلبن", "زلابية", "كحك",
+    "عسل أسود", "جبنة قديمة", "طحينة", "عيش بلدي", "شاي بالنعناع", "قهوة", "قصب", "سحلب", "كركديه", "تمر هندي",
+    "سوبيا", "مانجا", "بطيخ", "جوافة", "تين شوكي", "بيتزا", "برجر", "آيس كريم", "شوكولاتة"
+  ],
+  countries: [
+    "مصر", "إسكندرية", "الأقصر", "أسوان", "شرم الشيخ", "الغردقة", "دهب", "سيوة", "بورسعيد", "المنصورة",
+    "فلسطين", "القدس", "لبنان", "سوريا", "الأردن", "السعودية", "الإمارات", "دبي", "المغرب", "تونس",
+    "السودان", "إيطاليا", "روما", "فرنسا", "باريس", "ألمانيا", "إنجلترا", "لندن", "إسبانيا", "اليونان",
+    "روسيا", "أمريكا", "كندا", "البرازيل", "الأرجنتين", "اليابان", "الصين", "الهند", "تركيا", "أستراليا",
+    "سويسرا", "هولندا", "قبرص", "إثيوبيا", "المكسيك", "كوريا"
+  ],
+  animals: [
+    "أسد", "نمر", "فهد", "فيل", "زرافة", "قرد", "غوريلا", "ذئب", "ثعلب", "دب",
+    "باندا", "جمل", "حصان", "حمار", "بقرة", "خروف", "ماعز", "كلب", "قطة", "أرنب",
+    "فأر", "سلحفاة", "تمساح", "ثعبان", "ضفدع", "حوت", "دولفين", "قرش", "أخطبوط", "بطريق",
+    "نسر", "صقر", "بومة", "حمامة", "غراب", "بطة", "ديك", "طاووس", "نعامة", "ببغاء",
+    "نحلة", "فراشة", "نملة", "عنكبوت", "عقرب", "كنغر", "غزال"
+  ],
+  general: [
+    "مترو", "ميكروباص", "توك توك", "كوبري", "كورنيش", "بحر", "جبل", "صحراء", "شمس", "قمر",
+    "نجمة", "مطر", "برق", "شتاء", "صيف", "كورة", "استاد", "الأهلي", "الزمالك", "شطرنج",
+    "طاولة", "دومينو", "بلايستيشن", "سينما", "مسرح", "موسيقى", "جيتار", "بيانو", "كاميرا", "موبايل",
+    "شاحن", "لابتوب", "سماعة", "نظارة", "ساعة", "مفتاح", "محفظة", "شنطة", "عربية", "طيارة",
+    "قطر", "مركب", "مدرسة", "جامعة", "امتحان", "كتاب", "قلم", "مستشفى", "دكتور", "مهندس",
+    "طيار", "بوليس", "حرامي", "كنز", "سر", "حلم", "رحلة", "مؤتمر", "كامب", "مروحة", "تكييف"
+  ]
+};
+
+const TEAM_COLORS = ['#ef4444', '#3b82f6', '#10b981', '#a855f7'];
+const DEFAULT_NAMES = ['فريق الأحمر', 'فريق الأزرق', 'فريق الأخضر', 'فريق البنفسجي'];
+
+// ================= الصوت =================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playBeep(freq, dur, type='sine') {
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e){}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2800);
+}
+
+function openModal(title, msg, onYes) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-yes').onclick = () => { closeModal(); onYes(); };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+function closeModal() { document.getElementById('confirm-modal').classList.remove('show'); }
+
+// ================= متغيرات اللعبة =================
+let myRole = 'host';
+let myTeam = -1;
+let peer = null;
+let hostConn = null;
+let clientConns = []; // { conn, team, role }
+let timerInterval = null;
+let spyColorsHidden = false;
+let hostRevealAll = false;
+
+let state = {
+  phase: 'lobby', // lobby | playing
+  roomCode: '',
+  numTeams: 2,
+  theme: 'all',
+  turnDuration: 90,
+  timer: 90,
+  paused: false,
+  teams: [], // { name, remaining, eliminated, hasSpy, hasOp }
+  currentTurn: 0,
+  clue: null,
+  cards: [],
+  winner: null,
+  lastLog: 'بدأت الجولة!'
+};
+
+// قراءة كود الغرفة تلقائياً لو جاي من QR Code
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const r = params.get('room');
+  if (r) {
+    switchTab('join');
+    document.getElementById('join-code').value = r;
+  }
+});
+
+function switchTab(tab) {
+  document.getElementById('tab-host').classList.toggle('active', tab==='host');
+  document.getElementById('tab-join').classList.toggle('active', tab==='join');
+  document.getElementById('panel-host').style.display = tab==='host' ? 'block' : 'none';
+  document.getElementById('panel-join').style.display = tab==='join' ? 'block' : 'none';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ================= منطق الليدر (Host) =================
+function createLobby() {
+  myRole = 'host';
+  state.phase = 'lobby';
+  state.numTeams = parseInt(document.getElementById('host-teams-count').value);
+  state.theme = document.getElementById('host-theme').value;
+  state.turnDuration = parseInt(document.getElementById('host-timer').value) || 90;
+  state.roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+  state.teams = [];
+  for (let i = 0; i < state.numTeams; i++) {
+    state.teams.push({ name: DEFAULT_NAMES[i], remaining: 0, eliminated: false, hasSpy: false, hasOp: false });
+  }
+
+  peer = new Peer('codenames-eg-' + state.roomCode);
+  peer.on('open', () => {
+    showScreen('screen-lobby');
+    document.getElementById('host-lobby-actions').style.display = 'flex';
+    document.getElementById('host-quick-controls').style.display = 'flex';
+    document.getElementById('role-badge').textContent = '👑 شاشة الليدر';
+
+    // توليد QR Code
+    const joinUrl = `${window.location.origin}${window.location.pathname}?room=${state.roomCode}`;
+    document.getElementById('lobby-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(joinUrl)}`;
+    document.getElementById('lobby-qr-wrap').style.display = 'inline-flex';
+
+    renderAll();
+  });
+
+  peer.on('connection', conn => {
+    const clientObj = { conn, team: -1, role: '' };
+    clientConns.push(clientObj);
+
+    conn.on('data', data => handleClientAction(clientObj, data));
+    conn.on('close', () => {
+      clientConns = clientConns.filter(c => c !== clientObj);
+      recalcConnectedSlots();
+      broadcastState();
+    });
+  });
+}
+
+function recalcConnectedSlots() {
+  state.teams.forEach((t, idx) => {
+    t.hasSpy = clientConns.some(c => c.team === idx && c.role === 'spymaster');
+    t.hasOp = clientConns.some(c => c.team === idx && c.role === 'operative');
+  });
+}
+
+function hostRenameTeam(idx, newName) {
+  if (state.teams[idx]) {
+    state.teams[idx].name = newName.trim() || DEFAULT_NAMES[idx];
+    broadcastState();
+  }
+}
+
+function startGameFromLobby() {
+  state.phase = 'playing';
+  newRound();
+}
+
+function backToLobby() {
+  clearInterval(timerInterval);
+  state.phase = 'lobby';
+  broadcastState();
+}
+
+function newRound() {
+  let pool = state.theme === 'all' ? Object.values(WORDS).flat() : [...WORDS[state.theme]];
+  pool = pool.sort(() => Math.random() - 0.5);
+
+  const totalCards = state.numTeams === 2 ? 25 : (state.numTeams === 3 ? 36 : 42);
+  const perTeam = state.numTeams === 2 ? 8 : (state.numTeams === 3 ? 8 : 7);
+
+  let colors = ['assassin'];
+  state.teams.forEach((t, idx) => {
+    t.eliminated = false;
+    const count = idx === 0 ? perTeam + 1 : perTeam;
+    t.remaining = count;
+    for (let k = 0; k < count; k++) colors.push('t' + idx);
+  });
+  while (colors.length < totalCards) colors.push('neutral');
+  colors = colors.sort(() => Math.random() - 0.5);
+
+  state.cards = [];
+  for (let i = 0; i < totalCards; i++) {
+    state.cards.push({ word: pool[i % pool.length], color: colors[i], revealed: false });
+  }
+
+  state.currentTurn = 0;
+  state.clue = null;
+  state.winner = null;
+  state.timer = state.turnDuration;
+  state.paused = false;
+  state.lastLog = `بدأت جولة جديدة! الدور على ${state.teams[0].name}`;
+  hostRevealAll = false;
+  document.getElementById('board').classList.remove('spymaster-view');
+
+  startHostTimer();
+  broadcastState();
+}
+
+function startHostTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (state.phase !== 'playing' || state.paused || state.winner !== null) return;
+    state.timer--;
+    if (state.timer <= 10 && state.timer > 0) playBeep(600, 0.1);
+    if (state.timer <= 0) {
+      playBeep(200, 0.4, 'sawtooth');
+      state.lastLog = `انتهى وقت ${state.teams[state.currentTurn].name}!`;
+      nextTurn();
+    } else {
+      broadcastState();
+    }
+  }, 1000);
+}
+
+function togglePause() { state.paused = !state.paused; broadcastState(); }
+function toggleHostReveal() {
+  hostRevealAll = !hostRevealAll;
+  document.getElementById('board').classList.toggle('spymaster-view', hostRevealAll);
+}
+
+function nextTurn() {
+  if (state.winner !== null) return;
+  let tries = 0;
+  do {
+    state.currentTurn = (state.currentTurn + 1) % state.numTeams;
+    tries++;
+  } while (state.teams[state.currentTurn].eliminated && tries < 10);
+
+  state.clue = null;
+  state.timer = state.turnDuration;
+  broadcastState();
+}
+
+function handleClientAction(clientObj, data) {
+  if (data.type === 'HELLO') {
+    if (data.team >= state.numTeams) {
+      clientObj.conn.send({ type: 'ERROR', msg: `الغرفة فيها ${state.numTeams} فرق فقط! اختار فريق تاني.` });
+      return;
+    }
+    clientObj.team = data.team;
+    clientObj.role = data.role;
+    if (data.name) state.teams[data.team].name = data.name;
+    recalcConnectedSlots();
+    playBeep(700, 0.12);
+    broadcastState();
+  }
+  if (data.type === 'CLUE' && data.team === state.currentTurn && !state.clue) {
+    state.clue = { word: data.word, num: data.num, guessesLeft: data.num + 1 };
+    state.lastLog = `قائد ${state.teams[data.team].name} كتب: "${data.word}" (${data.num})`;
+    playBeep(880, 0.15);
+    broadcastState();
+  }
+  if (data.type === 'END_TURN' && data.team === state.currentTurn) {
+    state.lastLog = `${state.teams[data.team].name} أنهى دوره.`;
+    nextTurn();
+  }
+  if (data.type === 'GUESS' && data.team === state.currentTurn && state.clue && state.winner === null) {
+    const card = state.cards[data.index];
+    if (!card || card.revealed) return;
+    card.revealed = true;
+    const tName = state.teams[state.currentTurn].name;
+
+    if (card.color === 'assassin') {
+      playBeep(120, 0.7, 'sawtooth');
+      state.teams[state.currentTurn].eliminated = true;
+      state.lastLog = `💀 ${tName} اختار كارت القنبلة (${card.word}) وخرج من الجولة!`;
+      const alive = state.teams.map((t, i) => ({...t, i})).filter(t => !t.eliminated);
+      if (alive.length === 1) state.winner = alive[0].i;
+      else nextTurn();
+    } else if (card.color === 't' + state.currentTurn) {
+      playBeep(750, 0.2);
+      state.teams[state.currentTurn].remaining--;
+      state.clue.guessesLeft--;
+      state.lastLog = `✅ برافو! ${tName} اختار كارت صح (${card.word})`;
+      if (state.teams[state.currentTurn].remaining <= 0) state.winner = state.currentTurn;
+      else if (state.clue.guessesLeft <= 0) nextTurn();
+    } else {
+      playBeep(250, 0.3, 'triangle');
+      if (card.color.startsWith('t')) {
+        const other = parseInt(card.color.slice(1));
+        state.teams[other].remaining--;
+        state.lastLog = `❌ ${tName} اختار (${card.word}) وطلع بتاع ${state.teams[other].name}!`;
+        if (state.teams[other].remaining <= 0) state.winner = other;
+      } else {
+        state.lastLog = `⚪ ${tName} اختار (${card.word}) وطلع كارت محايد!`;
+      }
+      if (state.winner === null) nextTurn();
+    }
+    broadcastState();
+  }
+}
+
+function broadcastState() {
+  renderAll();
+  clientConns.forEach(c => { if (c.conn.open) c.conn.send({ type: 'STATE', state }); });
+}
+
+// ================= منطق اللاعبين (Client) =================
+function joinGame() {
+  const code = document.getElementById('join-code').value.trim();
+  if (!code) return showToast('اكتب كود الغرفة الأول!');
+  myTeam = parseInt(document.getElementById('join-team').value);
+  myRole = document.getElementById('join-role').value;
+  const customName = document.getElementById('join-custom-name').value.trim();
+
+  document.getElementById('join-status').textContent = 'جاري الاتصال بغرفة الليدر...';
+  peer = new Peer();
+  peer.on('open', () => {
+    hostConn = peer.connect('codenames-eg-' + code);
+    hostConn.on('open', () => {
+      hostConn.send({ type: 'HELLO', team: myTeam, role: myRole, name: customName });
+      document.getElementById('client-lobby-wait').style.display = 'flex';
+      if (myRole === 'spymaster') {
+        document.getElementById('spymaster-controls').style.display = 'flex';
+        document.getElementById('board').classList.add('spymaster-view');
+        document.getElementById('role-badge').textContent = '🕵️‍♂️ قائد الفريق';
+      } else {
+        document.getElementById('operative-controls').style.display = 'flex';
+        document.getElementById('role-badge').textContent = '🎯 عضو الفريق';
+      }
+    });
+    hostConn.on('data', data => {
+      if (data.type === 'ERROR') {
+        document.getElementById('join-status').textContent = data.msg;
+        showToast(data.msg);
+      }
+      if (data.type === 'STATE') { state = data.state; renderAll(); }
+    });
+    hostConn.on('error', () => {
+      document.getElementById('join-status').textContent = 'فشل الاتصال! تأكد من الكود.';
+    });
+  });
+}
+
+function sendClue() {
+  const word = document.getElementById('clue-word-input').value.trim();
+  const num = parseInt(document.getElementById('clue-num-input').value);
+  if (!word || !num) return showToast('اكتب الكلمة والعدد!');
+  hostConn.send({ type: 'CLUE', team: myTeam, word, num });
+  document.getElementById('clue-word-input').value = '';
+}
+
+function toggleSpyColors() {
+  spyColorsHidden = !spyColorsHidden;
+  document.getElementById('board').classList.toggle('spymaster-view', !spyColorsHidden);
+}
+
+function confirmEndTurn() {
+  openModal('إنهاء الدور', 'متأكد إن فريقك عايز ينهي دوره دلوقتي؟', () => {
+    hostConn.send({ type: 'END_TURN', team: myTeam });
+  });
+}
+
+function clickCard(index) {
+  if (myRole !== 'operative') return;
+  if (state.currentTurn !== myTeam || !state.clue || state.winner !== null) return;
+  if (state.cards[index].revealed) return;
+  openModal('تأكيد اختيار الكارت', `متأكد عايز تختار كارت "${state.cards[index].word}"؟`, () => {
+    hostConn.send({ type: 'GUESS', team: myTeam, index });
+  });
+}
+
+// ================= رسم الشاشات =================
+function renderAll() {
+  if (state.phase === 'lobby') {
+    showScreen('screen-lobby');
+    renderLobby();
+  } else {
+    showScreen('screen-game');
+    renderGame();
+  }
+}
+
+function renderLobby() {
+  document.getElementById('lobby-room-code').textContent = state.roomCode;
+  const grid = document.getElementById('lobby-teams-grid');
+  grid.innerHTML = '';
+
+  state.teams.forEach((t, i) => {
+    const nameHtml = myRole === 'host'
+      ? `<input type="text" value="${t.name}" onchange="hostRenameTeam(${i}, this.value)" style="font-weight:900; color:${TEAM_COLORS[i]}; margin-bottom:6px;">`
+      : `<h3 style="color:${TEAM_COLORS[i]}; margin-bottom:6px;">${t.name}</h3>`;
+
+    grid.innerHTML += `
+      <div class="lobby-team-card" style="border-top-color:${TEAM_COLORS[i]}">
+        ${nameHtml}
+        <div class="slot-row">
+          <span>🕵️‍♂️ القائد (الألوان)</span>
+          <span class="badge ${t.hasSpy ? 'badge-ok' : 'badge-wait'}">${t.hasSpy ? 'متصل ✅' : 'في الانتظار ⏳'}</span>
+        </div>
+        <div class="slot-row">
+          <span>🎯 الفريق (التخمين)</span>
+          <span class="badge ${t.hasOp ? 'badge-ok' : 'badge-wait'}">${t.hasOp ? 'متصل ✅' : 'في الانتظار ⏳'}</span>
+        </div>
+      </div>`;
+  });
+}
+
+function renderGame() {
+  document.getElementById('display-room-code').textContent = state.roomCode;
+  document.getElementById('log-bar').textContent = state.lastLog;
+
+  const mins = String(Math.floor(state.timer / 60)).padStart(2, '0');
+  const secs = String(state.timer % 60).padStart(2, '0');
+  const tBox = document.getElementById('display-timer');
+  tBox.textContent = `${mins}:${secs}`;
+  tBox.classList.toggle('danger', state.timer <= 10);
+
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  state.teams.forEach((t, i) => {
+    sb.innerHTML += `
+      <div class="team-card ${state.currentTurn === i ? 'active-turn' : ''} ${t.eliminated ? 'eliminated' : ''}" style="border-right-color:${TEAM_COLORS[i]}">
+        <div>
+          <div style="font-weight:900; color:${TEAM_COLORS[i]}">${t.name}</div>
+          <div style="font-size:0.78rem; color:#94a3b8;">${t.eliminated ? 'خرج 💀' : 'كروت متبقية'}</div>
+        </div>
+        <div class="team-score">${t.remaining}</div>
+      </div>`;
+  });
+
+  const banner = document.getElementById('clue-banner');
+  if (state.winner !== null) {
+    banner.innerHTML = `<span class="clue-word">🏆 مبروك! الفائز هو: ${state.teams[state.winner].name} 🎉</span>`;
+  } else {
+    const curName = state.teams[state.currentTurn]?.name || '';
+    const curColor = TEAM_COLORS[state.currentTurn];
+    if (state.clue) {
+      banner.innerHTML = `
+        <span style="color:${curColor}; font-weight:900;">دور ${curName}:</span>
+        <span class="clue-word">"${state.clue.word}"</span>
+        <span class="clue-num">${state.clue.num}</span>
+        <span style="color:#94a3b8; font-size:0.88rem;">(باقي ${state.clue.guessesLeft} محاولات)</span>`;
+    } else {
+      banner.innerHTML = `<span style="color:${curColor}; font-weight:900; font-size:1.15rem;">⏳ دور ${curName} — في انتظار تخمين القائد...</span>`;
+    }
+  }
+
+  if (myRole === 'spymaster') {
+    document.getElementById('btn-send-clue').disabled = (state.currentTurn !== myTeam || state.clue !== null || state.winner !== null);
+  }
+  if (myRole === 'operative') {
+    document.getElementById('btn-end-turn').disabled = (state.currentTurn !== myTeam || state.clue === null || state.winner !== null);
+  }
+
+  const board = document.getElementById('board');
+  const cols = state.numTeams === 2 ? 5 : (state.numTeams === 3 ? 6 : 7);
+  board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  board.innerHTML = '';
+
+  const canClick = (myRole === 'operative' && state.currentTurn === myTeam && state.clue !== null && state.winner === null);
+
+  state.cards.forEach((c, idx) => {
+    const div = document.createElement('div');
+    div.className = `card c-${c.color} ${c.revealed ? 'revealed' : ''} ${canClick && !c.revealed ? 'clickable' : ''}`;
+    div.textContent = c.word;
+    if (canClick && !c.revealed) div.onclick = () => clickCard(idx);
+    board.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
